@@ -9,23 +9,15 @@ type UserRepo interface {
 	// Creates new user. User data given by pointer will be updated.
 	//
 	// Errors: ErrAlreadyExists.
-	Create(
-		ctx context.Context,
-		user *data.User,
-	) error
+	Create(ctx context.Context, user *data.User) error
 
 	// Get user by name.
 	//
 	// Errors: ErrNotFound.
-	GetByName(
-		ctx context.Context,
-		name string,
-	) (data.User, error)
+	GetByName(ctx context.Context, name string) (data.User, error)
 
 	// Get all users.
-	GetAll(
-		ctx context.Context,
-	) ([]data.User, error)
+	GetAll(ctx context.Context) ([]data.User, error)
 
 	// Update the user by name.
 	//
@@ -34,13 +26,10 @@ type UserRepo interface {
 		ctx context.Context,
 		name string,
 		updateFn func(ctx context.Context, user *data.User) error,
-	) error
+	) (data.User, error)
 
 	// Delete the user by name.
 	//
 	// Errors: ErrNotFound.
-	Delete(
-		ctx context.Context,
-		name string,
-	) error
+	Delete(ctx context.Context, name string) error
 }
