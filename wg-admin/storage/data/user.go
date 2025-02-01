@@ -15,8 +15,8 @@ type User struct {
 	IsBanned     bool
 	PrivateKey   wgtypes.Key
 	Fare         string
-	AddressCount int
-	MaxAddresses int
+	AddressCount int64
+	MaxAddresses int64
 
 	TokenIssuedAt *time.Time
 	LastSeenAt    *time.Time
@@ -24,22 +24,24 @@ type User struct {
 }
 
 var (
-	ErrInvalidUserName          = errors.New("Invalid user name, it should contain only alphanums and underscore, at least one")
-	ErrZeroPrivateKey           = errors.New("Zero private key was provided")
-	ErrUserViolatesAddressLimit = errors.New("Address limit is violated")
+	ErrInvalidUserName         = errors.New("Invalid user name, it should contain only alphanums and underscore, at least one")
+	ErrInvalidAddressCount     = errors.New("Invalid address count, be non-negative integer is expected")
+	ErrUserExceedsAddressLimit = errors.New("User's address limit is exceeded")
 )
 
+var userNameRegex = regexp.MustCompile("^[A-Za-z0-9_]+$")
+
 func (u *User) validate() error {
-	nameValid, err := regexp.Match("[A-Za-z0-9_]+", []byte(u.Name))
-	if err != nil {
-		return err
-	}
-	if !nameValid {
+	if ok := userNameRegex.Match([]byte(u.Name)); !ok {
 		return ErrInvalidUserName
 	}
 
-	if u.PrivateKey == (wgtypes.Key{}) {
-		return ErrZeroPrivateKey
+	if u.AddressCount < 0 {
+		return ErrInvalidAddressCount
+	}
+
+	if u.AddressCount > u.MaxAddresses {
+		return ErrUserExceedsAddressLimit
 	}
 
 	return nil
@@ -50,7 +52,7 @@ func NewUser(
 	isAdmin bool,
 	privateKey *wgtypes.Key,
 	fare string,
-	maxAddresses int,
+	maxAddresses int64,
 ) (User, error) {
 	if privateKey == nil {
 		randomKey, err := wgtypes.GenerateKey()
@@ -74,50 +76,61 @@ func NewUser(
 		PaidByTime:    nil,
 	}
 
-    return u, u.validate()
+	return u, u.validate()
 }
 
 // Nil means no update, TokenIssuedAt, LastSeenAt, PaidByTime could not be reset to nil.
 type UserPatch struct {
 	Name          *string
 	IsAdmin       *bool
+	IsBanned      *bool
 	PrivateKey    *wgtypes.Key
 	Fare          *string
-	AddressCount  *int
-	MaxAddresses  *int
+	AddressCount  *int64
+	MaxAddresses  *int64
 	TokenIssuedAt *time.Time
 	LastSeenAt    *time.Time
 	PaidByTime    *time.Time
 }
 
 func (u *User) Update(patch UserPatch) error {
+	updated := *u
+
 	if patch.Name != nil {
-		u.Name = *patch.Name
+		updated.Name = *patch.Name
 	}
 	if patch.IsAdmin != nil {
-		u.IsAdmin = *patch.IsAdmin
+		updated.IsAdmin = *patch.IsAdmin
+	}
+	if patch.IsBanned != nil {
+		updated.IsBanned = *patch.IsBanned
 	}
 	if patch.PrivateKey != nil {
-		u.PrivateKey = *patch.PrivateKey
+		updated.PrivateKey = *patch.PrivateKey
 	}
 	if patch.Fare != nil {
-		u.Fare = *patch.Fare
+		updated.Fare = *patch.Fare
 	}
 	if patch.AddressCount != nil {
-		u.AddressCount = *patch.AddressCount
+		updated.AddressCount = *patch.AddressCount
 	}
 	if patch.MaxAddresses != nil {
-		u.MaxAddresses = *patch.MaxAddresses
+		updated.MaxAddresses = *patch.MaxAddresses
 	}
 	if patch.TokenIssuedAt != nil {
-		u.TokenIssuedAt = patch.TokenIssuedAt
+		updated.TokenIssuedAt = patch.TokenIssuedAt
 	}
 	if patch.LastSeenAt != nil {
-		u.LastSeenAt = patch.LastSeenAt
+		updated.LastSeenAt = patch.LastSeenAt
 	}
 	if patch.PaidByTime != nil {
-		u.PaidByTime = patch.PaidByTime
+		updated.PaidByTime = patch.PaidByTime
 	}
 
-	return u.validate()
+	if err := updated.validate(); err != nil {
+		return err
+	}
+
+	*u = updated
+	return nil
 }
