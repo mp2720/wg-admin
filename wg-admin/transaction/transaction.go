@@ -4,41 +4,54 @@ import (
 	"context"
 )
 
-type Transaction interface {
+type Tx interface {
 	Commit(ctx context.Context) error
 	Rollback(ctx context.Context) error
 }
 
 // Something that begins a transaction.
-type TransactionInitiator interface {
-	Begin(ctx context.Context) (Transaction, error)
+type Initiator interface {
+	Begin(ctx context.Context) (Tx, error)
 }
 
 type Manager struct {
-	initiator TransactionInitiator
+	initiator Initiator
 }
 
-func (m *Manager) Begin(ctx context.Context) (Transaction, error) {
+func NewManager(initiator Initiator) Manager {
+	return Manager{initiator}
+}
+
+func (m *Manager) Begin(ctx context.Context) (Tx, error) {
 	return m.initiator.Begin(ctx)
 }
 
 type ctxKey struct{}
 
-type transactionCtxWrapper struct {
-	tx        Transaction
+type ctxWrapper struct {
+	tx        Tx
 	lastError error
 }
 
-func extractFromCtx(ctx context.Context) *transactionCtxWrapper {
-	tx := ctx.Value(ctxKey{})
-	if tx == nil {
+func extractWrapperFromCtx(ctx context.Context) *ctxWrapper {
+	w := ctx.Value(ctxKey{})
+	if w == nil {
 		return nil
 	}
-	return tx.(*transactionCtxWrapper)
+	return w.(*ctxWrapper)
 }
 
-func injectIntoCtx(ctx context.Context, tx *transactionCtxWrapper) context.Context {
-	return context.WithValue(ctx, ctxKey{}, tx)
+func FromCtx(ctx context.Context) Tx {
+	txInCtx := extractWrapperFromCtx(ctx)
+	if txInCtx == nil {
+		return nil
+	}
+	return txInCtx.tx
+}
+
+func injectWrapperIntoCtx(ctx context.Context, w *ctxWrapper) context.Context {
+	println("inject", w)
+	return context.WithValue(ctx, ctxKey{}, w)
 }
 
 // Run f inside a transaction injected into the context.
@@ -48,10 +61,12 @@ func injectIntoCtx(ctx context.Context, tx *transactionCtxWrapper) context.Conte
 //
 // Returns the error from last failed f call or the rollback/commit error.
 func (m *Manager) InTransaction(ctx context.Context, f func(ctx context.Context) error) error {
-	txInParentCtx := extractFromCtx(ctx)
+	txInParentCtx := extractWrapperFromCtx(ctx)
+	println("extract", txInParentCtx)
 	if txInParentCtx != nil {
 		// there's already ongoing transaction in this context - just save the error and return it
 		txInParentCtx.lastError = f(ctx)
+		println("extract err", txInParentCtx.lastError)
 		return txInParentCtx.lastError
 	}
 
@@ -62,17 +77,27 @@ func (m *Manager) InTransaction(ctx context.Context, f func(ctx context.Context)
 		return err
 	}
 
-	newTxWrapper := transactionCtxWrapper{
+	newTxWrapper := ctxWrapper{
 		tx:        newTx,
 		lastError: nil,
 	}
 
-	newTxWrapper.lastError = f(injectIntoCtx(ctx, &newTxWrapper))
+	err = f(injectWrapperIntoCtx(ctx, &newTxWrapper))
+	if err != nil {
+		newTxWrapper.lastError = err
+	}
 
 	// do commit/rollback
 
+	println(&newTxWrapper, newTxWrapper.lastError)
+
 	if newTxWrapper.lastError != nil {
-		return newTx.Rollback(ctx)
+		rollbackErr := newTx.Rollback(ctx)
+		if rollbackErr != nil {
+			return rollbackErr
+		}
+
+		return newTxWrapper.lastError
 	} else {
 		return newTx.Commit(ctx)
 	}
