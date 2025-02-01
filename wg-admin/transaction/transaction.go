@@ -50,7 +50,6 @@ func FromCtx(ctx context.Context) Tx {
 }
 
 func injectWrapperIntoCtx(ctx context.Context, w *ctxWrapper) context.Context {
-	println("inject", w)
 	return context.WithValue(ctx, ctxKey{}, w)
 }
 
@@ -62,11 +61,9 @@ func injectWrapperIntoCtx(ctx context.Context, w *ctxWrapper) context.Context {
 // Returns the error from last failed f call or the rollback/commit error.
 func (m *Manager) InTransaction(ctx context.Context, f func(ctx context.Context) error) error {
 	txInParentCtx := extractWrapperFromCtx(ctx)
-	println("extract", txInParentCtx)
 	if txInParentCtx != nil {
 		// there's already ongoing transaction in this context - just save the error and return it
 		txInParentCtx.lastError = f(ctx)
-		println("extract err", txInParentCtx.lastError)
 		return txInParentCtx.lastError
 	}
 
@@ -88,8 +85,6 @@ func (m *Manager) InTransaction(ctx context.Context, f func(ctx context.Context)
 	}
 
 	// do commit/rollback
-
-	println(&newTxWrapper, newTxWrapper.lastError)
 
 	if newTxWrapper.lastError != nil {
 		rollbackErr := newTx.Rollback(ctx)
