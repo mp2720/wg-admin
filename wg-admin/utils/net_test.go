@@ -14,36 +14,36 @@ func Test_AddrForHostInNet(t *testing.T) {
 	})
 
 	// v4
-	addr, err := utils.AddrForHostInNet(0, netip.MustParsePrefix("124.123.122.121/32"))
-	require.NoError(t, err)
+	addr, ok := utils.AddrForHostInNet(0, netip.MustParsePrefix("124.123.122.121/32"))
+	require.True(t, ok)
 	require.Equal(t, netip.MustParseAddr("124.123.122.121"), addr)
 
-	_, err = utils.AddrForHostInNet(2, netip.MustParsePrefix("124.123.122.121/31"))
-	require.ErrorIs(t, err, utils.ErrNetworkIsTooSmall)
+	_, ok = utils.AddrForHostInNet(2, netip.MustParsePrefix("124.123.122.121/31"))
+	require.False(t, ok)
 
-	addr, err = utils.AddrForHostInNet(1, netip.MustParsePrefix("124.123.122.126/31"))
-	require.NoError(t, err)
+	addr, ok = utils.AddrForHostInNet(1, netip.MustParsePrefix("124.123.122.126/31"))
+	require.True(t, ok)
 	require.Equal(t, netip.MustParseAddr("124.123.122.127"), addr)
 
 	// v6
-	addr, err = utils.AddrForHostInNet(
+	addr, ok = utils.AddrForHostInNet(
 		0,
 		netip.MustParsePrefix("1234:5678:9ABC:DEF1:2345:6789:ABCD:EF13/128"),
 	)
-	require.NoError(t, err)
+	require.True(t, ok)
 	require.Equal(t, netip.MustParseAddr("1234:5678:9ABC:DEF1:2345:6789:ABCD:EF13"), addr)
 
-	_, err = utils.AddrForHostInNet(
+	_, ok = utils.AddrForHostInNet(
 		2,
 		netip.MustParsePrefix("1234:5678:9ABC:DEF1:2345:6789:ABCD:EF13/127"),
 	)
-	require.ErrorIs(t, err, utils.ErrNetworkIsTooSmall)
+	require.False(t, ok)
 
-	addr, err = utils.AddrForHostInNet(
+	addr, ok = utils.AddrForHostInNet(
 		1,
 		netip.MustParsePrefix("1234:5678:9ABC:DEF1:2345:6789:ABCD:EF14/126"),
 	)
-	require.NoError(t, err)
+	require.True(t, ok)
 	require.Equal(t, netip.MustParseAddr("1234:5678:9ABC:DEF1:2345:6789:ABCD:EF15"), addr)
 }
 

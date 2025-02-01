@@ -2,16 +2,11 @@ package utils
 
 import (
 	"encoding/binary"
-	"errors"
 	"net/netip"
 )
 
-var (
-	ErrNetworkIsTooSmall = errors.New("Network is too small")
-)
-
-// Returns [ErrNetworkIsTooSmall] if hostID is too big for netPrefix.
-func AddrForHostInNet(hostID uint64, netPrefix netip.Prefix) (netip.Addr, error) {
+// ok = false only if hostID is out of range of the given network.
+func AddrForHostInNet(hostID uint64, netPrefix netip.Prefix) (addr netip.Addr, ok bool) {
 	if !netPrefix.IsValid() {
 		panic("invalid network prefix")
 	}
@@ -29,7 +24,7 @@ func AddrForHostInNet(hostID uint64, netPrefix netip.Prefix) (netip.Addr, error)
 	bitsInHost := bitsInAddress - netPrefix.Bits()
 
 	if (1<<bitsInHost)-1 < hostID {
-		return netip.Addr{}, ErrNetworkIsTooSmall
+		return netip.Addr{}, false
 	}
 
 	// Apply bitwise OR
@@ -43,7 +38,7 @@ func AddrForHostInNet(hostID uint64, netPrefix netip.Prefix) (netip.Addr, error)
 		var addrBytes [4]byte
 		binary.BigEndian.PutUint32(addrBytes[:], addr)
 
-		return netip.AddrFrom4(addrBytes), nil
+		return netip.AddrFrom4(addrBytes), true
 	} else {
 		netPrefixBytes := netPrefix.Addr().As16()
 
@@ -55,7 +50,7 @@ func AddrForHostInNet(hostID uint64, netPrefix netip.Prefix) (netip.Addr, error)
 		binary.BigEndian.PutUint64(addrBytes[:], addrHi)
 		binary.BigEndian.PutUint64(addrBytes[8:], addrLo)
 
-		return netip.AddrFrom16(addrBytes), nil
+		return netip.AddrFrom16(addrBytes), true
 	}
 }
 
