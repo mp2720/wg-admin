@@ -79,6 +79,23 @@ func NewUser(
 	return u, u.validate()
 }
 
+func (u User) CanBeAuthenticatedWithToken(issuedAt time.Time) bool {
+	if u.IsBanned {
+		return false
+	}
+	if u.TokenIssuedAt == nil {
+		return false
+	}
+	return issuedAt.After(*u.TokenIssuedAt)
+}
+
+func (u User) PayedForTime(t time.Time) bool {
+	if u.PaidByTime == nil {
+		return false
+	}
+	return u.PaidByTime.After(t)
+}
+
 // Nil means no update, TokenIssuedAt, LastSeenAt, PaidByTime could not be reset to nil.
 type UserPatch struct {
 	Name          *string
