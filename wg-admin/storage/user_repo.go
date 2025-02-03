@@ -27,7 +27,7 @@ type UserRepo interface {
 	// Save existing user.
 	//
 	// Errors: ErrNotFound.
-	SaveExisting(ctx context.Context, user data.User) error
+	Save(ctx context.Context, user data.User) error
 
 	// Delete the user by name.
 	//

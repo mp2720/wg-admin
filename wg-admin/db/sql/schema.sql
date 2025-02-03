@@ -1,7 +1,5 @@
--- User owns many addresses and statistics rows.
--- Server owns many statistics rows.
+-- one user <-> many addresses
 
---  =========== User ===========
 CREATE TABLE IF NOT EXISTS users (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     name            TEXT NOT NULL UNIQUE,
@@ -18,14 +16,24 @@ CREATE TABLE IF NOT EXISTS users (
     last_seen_at    TIMESTAMP
 );
 
---  =========== Address ===========
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);
+
+-- when updating config, make sure no other processes are working with db and the net masks are
+-- big enough for all assigned addresses, so the data won't be corrupted
+CREATE TABLE IF NOT EXISTS wg_net_config (
+    id      INTEGER PRIMARY KEY CHECK (id = 0), -- allow <= 1 rows
+    v6_net  TEXT NOT NULL,
+    v4_net  TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS addresses (
-    id          INTEGER PRIMARY KEY, -- AUTOINCREMENT is not required, since deletion is prohibited
-    host_id     INTEGER NOT NULL,
-    name        TEXT NOT NULL,
-    is_v6       BOOLEAN NOT NULL,
-    user_id     INTEGER,
-    desynced_at TIMESTAMP NOT NULL,
+    id              INTEGER PRIMARY KEY,
+    is_reserved     BOOLEAN NOT NULL,
+    is_v6           BOOLEAN NOT NULL,
+    host_id         INTEGER NOT NULL, -- unique for all rows with the same version
+    owner_user_id   INTEGER,
+    description     TEXT,
+    desynced_at     TIMESTAMP NOT NULL,
 
     FOREIGN KEY(user_id) REFERENCES users(id)
         ON DELETE RESTRICT
@@ -33,8 +41,9 @@ CREATE TABLE IF NOT EXISTS addresses (
 );
 
 CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_host_id ON addresses(host_id);
 
-CREATE TRIGGER IF NOT EXISTS trigger_abort_delete_address
+CREATE TRIGGER IF NOT EXISTS trigger_abort_delete_addresses
 BEFORE DELETE ON addresses
 BEGIN
     SELECT RAISE(ABORT, 'address deletion is prohibited');

@@ -60,65 +60,65 @@ WHERE name = @name;
 
 --  =========== Addresses ===========
 
--- name: GetAddressCount :one
-SELECT host_id from addresses
-WHERE is_v6 = @is_v6
-ORDER BY host_id DESC
-LIMIT 1;
-
--- name: FindLowestFreeAddress :one
-SELECT * from addresses
-WHERE is_v6 = @is_v6 AND user_id IS NOT NULL
-ORDER BY host_id DESC
-LIMIT 1;
-
--- name: CreateAddress :one
-INSERT INTO addresses (
-    host_id,
-    name,
-    is_v6,
-    user_id,
-    desynced_at
-)
-SELECT 
-    host_id + 1,
-    @new_name,
-    @is_v6,
-    @user_id,
-    @desynced_at
-FROM addresses
-WHERE
-    is_v6 = @is_v6
-ORDER BY host_id DESC
-LIMIT 1
-RETURNING *;
-
--- name: UpdateAddress :one
-UPDATE addresses SET
-    name = @name,
-    is_v6 = @is_v6,
-    user_id = @user_id,
-    desynced_at = @desynced_at
-WHERE host_id = @host_id
-RETURNING *;
-
--- name: GetAddress :one
-SELECT addresses.*, users.* FROM addresses
-JOIN users ON users.id = addresses.user_id
-WHERE host_id = @host_id;
-
--- name: GetAddressesOwnedBy :many
-SELECT addresses.*, users.* FROM addresses
-JOIN users ON users.id = addresses.user_id
-WHERE user_id = @user_id;
-
-
--- Cannot use sqlc.embed() here, since it doesn't make user nullable.
--- See https://github.com/sqlc-dev/sqlc/issues/3240
--- name: GetAddressesDesynced :many
-SELECT addresses.*, users.* FROM addresses
-LEFT OUTER JOIN users ON users.id = addresses.user_id
-WHERE
-    desynced_at > @not_before AND
-    is_v6 = @is_v6 AND
-    host_id < @max_host_id;
+-- -- name: GetAddressCount :one
+-- SELECT host_id from addresses
+-- WHERE is_v6 = @is_v6
+-- ORDER BY host_id DESC
+-- LIMIT 1;
+-- 
+-- -- name: FindLowestFreeAddress :one
+-- SELECT * from addresses
+-- WHERE is_v6 = @is_v6 AND user_id IS NOT NULL
+-- ORDER BY host_id DESC
+-- LIMIT 1;
+-- 
+-- -- name: CreateAddress :one
+-- INSERT INTO addresses (
+--     host_id,
+--     name,
+--     is_v6,
+--     user_id,
+--     desynced_at
+-- )
+-- SELECT 
+--     host_id + 1,
+--     @new_name,
+--     @is_v6,
+--     @user_id,
+--     @desynced_at
+-- FROM addresses
+-- WHERE
+--     is_v6 = @is_v6
+-- ORDER BY host_id DESC
+-- LIMIT 1
+-- RETURNING *;
+-- 
+-- -- name: UpdateAddress :one
+-- UPDATE addresses SET
+--     name = @name,
+--     is_v6 = @is_v6,
+--     user_id = @user_id,
+--     desynced_at = @desynced_at
+-- WHERE host_id = @host_id
+-- RETURNING *;
+-- 
+-- -- name: GetAddress :one
+-- SELECT addresses.*, users.* FROM addresses
+-- JOIN users ON users.id = addresses.user_id
+-- WHERE host_id = @host_id;
+-- 
+-- -- name: GetAddressesOwnedBy :many
+-- SELECT addresses.*, users.* FROM addresses
+-- JOIN users ON users.id = addresses.user_id
+-- WHERE user_id = @user_id;
+-- 
+-- 
+-- -- Cannot use sqlc.embed() here, since it doesn't make user nullable.
+-- -- See https://github.com/sqlc-dev/sqlc/issues/3240
+-- -- name: GetAddressesDesynced :many
+-- SELECT addresses.*, users.* FROM addresses
+-- LEFT OUTER JOIN users ON users.id = addresses.user_id
+-- WHERE
+--     desynced_at > @not_before AND
+--     is_v6 = @is_v6 AND
+--     host_id < @max_host_id;
