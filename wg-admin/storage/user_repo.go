@@ -16,17 +16,18 @@ type UserRepo interface {
 	// Errors: ErrNotFound.
 	GetByName(ctx context.Context, name string) (data.User, error)
 
+	// Get user by name and lock within the transaction.
+	//
+	// Errors: ErrNotFound.
+	GetByNameLocked(ctx context.Context, name string) (data.User, error)
+
 	// Get all users.
 	GetAll(ctx context.Context) ([]data.User, error)
 
-	// Update the user by name.
+	// Save existing user.
 	//
 	// Errors: ErrNotFound.
-	Update(
-		ctx context.Context,
-		name string,
-		updateFn func(ctx context.Context, user *data.User) error,
-	) (data.User, error)
+	SaveExisting(ctx context.Context, user data.User) error
 
 	// Delete the user by name.
 	//
