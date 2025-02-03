@@ -2,7 +2,7 @@ package data_test
 
 import (
 	"mp2720/wg-admin/wg-admin/storage/data"
-	"mp2720/wg-admin/wg-admin/utils"
+	"mp2720/wg-admin/wg-admin/utils/testutils"
 	"testing"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 )
 
 func Test_NewUser(t *testing.T) {
-	privateKey := utils.MustGenerateWireguardPrivateKey()
+	privateKey := testutils.MustGenerateWireguardPrivateKey()
 
 	_, err := data.NewUser("", true, &privateKey, "300$", 2)
 	require.ErrorIs(t, err, data.ErrInvalidUserName)
@@ -44,7 +44,7 @@ func Test_NewUser(t *testing.T) {
 }
 
 func Test_Update(t *testing.T) {
-	privateKey := utils.MustGenerateWireguardPrivateKey()
+	privateKey := testutils.MustGenerateWireguardPrivateKey()
 
 	user, err := data.NewUser("user", false, &privateKey, "100$", 10)
 	require.NoError(t, err)
@@ -52,7 +52,7 @@ func Test_Update(t *testing.T) {
 	newName := "new_user_name"
 	newIsAdmin := true
 	newIsBanned := true
-	newPrivateKey := utils.MustGenerateWireguardPrivateKey()
+	newPrivateKey := testutils.MustGenerateWireguardPrivateKey()
 	newFare := "0.4$"
 	newAddressCount := int64(2)
 	newMaxAddresses := int64(4)
