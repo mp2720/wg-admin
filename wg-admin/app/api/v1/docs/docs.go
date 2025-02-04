@@ -158,6 +158,58 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/{uuid}/token": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Issue token for the user invalidating the previous. All users can issue tokens for their accounts. Only admin can issue token for other users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Issue token for the user.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

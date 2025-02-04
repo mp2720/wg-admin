@@ -145,6 +145,40 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user by UUID.
+  /users/{uuid}/token:
+    post:
+      consumes:
+      - application/json
+      description: Issue token for the user invalidating the previous. All users can
+        issue tokens for their accounts. Only admin can issue token for other users.
+      parameters:
+      - description: user's UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/v1.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/v1.APIError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/v1.APIError'
+      security:
+      - ApiKeyAuth: []
+      summary: Issue token for the user.
 securityDefinitions:
   ApiKeyAuth:
     in: header

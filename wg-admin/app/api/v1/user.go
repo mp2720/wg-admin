@@ -15,17 +15,12 @@ import (
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
-type userAPI struct {
-	baseUrl     string
-	userService services.UserService
-}
-
-func registerUserHandlers(g *echo.Group, v1BaseUrl string, userService services.UserService) {
-	userAPI := userAPI{v1BaseUrl, userService}
-
-	g.POST("users", userAPI.registerUser)
-	g.GET("users", userAPI.getAllUsers)
-	g.GET("users/:uuid", userAPI.getUserByUUID)
+type RegisterUserRequest struct {
+	Name         string  `json:"name"`
+	IsAdmin      bool    `json:"is_admin"`
+	PrivateKey   *string `json:"private_key"`
+	Fare         string  `json:"fare"`
+	MaxAddresses int64   `json:"max_addresses"`
 }
 
 type UserResponseLinks struct {
@@ -48,12 +43,30 @@ type UserResponse struct {
 	Links UserResponseLinks `json:"links"`
 }
 
-type RegisterUserRequest struct {
-	Name         string  `json:"name"`
-	IsAdmin      bool    `json:"is_admin"`
-	PrivateKey   *string `json:"private_key"`
-	Fare         string  `json:"fare"`
-	MaxAddresses int64   `json:"max_addresses"`
+type AuthTokenResponse struct {
+	Token string `json:"token"`
+}
+
+type userAPI struct {
+	baseUrl     string
+	authService services.AuthService
+	userService services.UserService
+}
+
+func registerUserHandlers(
+	g *echo.Group,
+	v1BaseUrl string,
+	authService services.AuthService,
+	userService services.UserService,
+) {
+	userAPI := userAPI{v1BaseUrl, authService, userService}
+
+    // TODO: add auth middleware
+
+	g.POST("users", userAPI.registerUser)
+	g.GET("users", userAPI.getAllUsers)
+	g.GET("users/:uuid", userAPI.getUserByUUID)
+	g.POST("users/:uuid/token", userAPI.issueTokenForUser)
 }
 
 func (api userAPI) makeUserResponse(user data.User) UserResponse {
@@ -174,8 +187,6 @@ func (api userAPI) getUserByUUID(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, APIError{"Invalid UUID"})
 	}
 
-	println(uuid.String())
-
 	user, err := api.userService.Get(ctx.Request().Context(), uuid)
 	if err != nil {
 		if errors.As(err, &utils.ErrAlreadyExists{}) {
@@ -186,4 +197,40 @@ func (api userAPI) getUserByUUID(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, api.makeUserResponse(user))
+}
+
+// getUserByUUID godoc
+//
+//	@Summary		Issue token for the user.
+//	@Description	Issue token for the user invalidating the previous. All users can issue tokens for their accounts. Only admin can issue token for other users.
+//	@Param			uuid	path	string	true	"user's UUID"
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	UserResponse	"ok"
+//	@Failure		401	{object}	APIError		"Unauthorized"
+//	@Failure		403	{object}	APIError		"Forbidden"
+//	@Failure		404	{object}	APIError		"Not found"
+//	@Security		ApiKeyAuth
+//	@Router			/users/{uuid}/token [post]
+func (api userAPI) issueTokenForUser(ctx echo.Context) error {
+	uuid, err := uuid.Parse(ctx.Param("uuid"))
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, APIError{"Invalid UUID"})
+	}
+
+	token, err := api.authService.IssueAuthTokenForUser(ctx.Request().Context(), uuid)
+	if err != nil {
+		if errors.As(err, &utils.ErrNotFound{}) {
+			return ctx.JSON(http.StatusUnauthorized, APIError{"User not found"})
+		}
+		if errors.Is(err, services.ErrUserAuthIsNotAllowed) {
+			return ctx.JSON(http.StatusUnauthorized, APIError{
+				"User is not allowed to be authenticated",
+			})
+		}
+
+		panic(err)
+	}
+
+	return ctx.JSON(http.StatusOK, AuthTokenResponse{token})
 }

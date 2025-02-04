@@ -7,6 +7,7 @@ import (
 	"mp2720/wg-admin/wg-admin/config"
 	dbPkg "mp2720/wg-admin/wg-admin/db"
 	"mp2720/wg-admin/wg-admin/transaction"
+	"mp2720/wg-admin/wg-admin/utils"
 )
 
 func main() {
@@ -26,10 +27,18 @@ func main() {
 	userRepo := dbPkg.NewUserRepo(db)
 
 	userService := services.NewUserService(userRepo, nil, tm, nil)
+	authService := services.NewAuthService(
+		userRepo,
+		&tm,
+		utils.RealClock{},
+		cfg.AuthTokenSigningKey,
+		cfg.AuthTokenIssuer,
+	)
 
 	if err := api.RunHTTPServer(
 		":8080",
 		"http://localhost",
+		authService,
 		userService,
 	); err != nil {
 		panic(err)

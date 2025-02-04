@@ -21,7 +21,12 @@ import (
 //	@name						X-Token
 
 // apiBaseUrl is used as base for the urls that api returns.
-func RegisterHandlers(e *echo.Echo, apiBaseUrl string, userService services.UserService) {
+func RegisterHandlers(
+    e *echo.Echo,
+    apiBaseUrl string,
+    authService services.AuthService,
+    userService services.UserService,
+) {
 	v1 := e.Group("v1/")
 	v1.GET("swagger/*", echoSwagger.WrapHandler)
 
@@ -30,5 +35,5 @@ func RegisterHandlers(e *echo.Echo, apiBaseUrl string, userService services.User
 		panic(err)
 	}
 
-	registerUserHandlers(v1, v1BaseUrl, userService)
+	registerUserHandlers(v1, v1BaseUrl, authService, userService)
 }

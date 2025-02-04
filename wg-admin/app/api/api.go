@@ -12,6 +12,7 @@ import (
 func RunHTTPServer(
 	address string,
 	apiBaseURL string,
+	authService services.AuthService,
 	userService services.UserService,
 ) error {
 	e := echo.New()
@@ -19,7 +20,7 @@ func RunHTTPServer(
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	v1.RegisterHandlers(e, apiBaseURL, userService)
+	v1.RegisterHandlers(e, apiBaseURL, authService, userService)
 
 	data, err := json.MarshalIndent(e.Routes(), "", "  ")
 	if err != nil {
