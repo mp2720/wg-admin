@@ -8,6 +8,7 @@ import (
 	"mp2720/wg-admin/wg-admin/utils"
 
 	_ "embed"
+
 	"github.com/mattn/go-sqlite3"
 )
 
@@ -30,7 +31,7 @@ func (tx Tx) Rollback(ctx context.Context) error {
 	return tx.sql.Rollback()
 }
 
-func (db *DB) Begin(ctx context.Context) (transaction.Tx, error) {
+func (db DB) Begin(ctx context.Context) (transaction.Tx, error) {
 	sqlTx, err := db.db.Begin()
 	if err != nil {
 		return nil, err
@@ -38,7 +39,7 @@ func (db *DB) Begin(ctx context.Context) (transaction.Tx, error) {
 	return Tx{sqlTx}, nil
 }
 
-func (db *DB) With(ctx context.Context) *sqlgen.Queries {
+func (db DB) With(ctx context.Context) *sqlgen.Queries {
 	tx := transaction.FromCtx(ctx)
 	if tx == nil {
 		return sqlgen.New(db.db)
@@ -49,7 +50,7 @@ func (db *DB) With(ctx context.Context) *sqlgen.Queries {
 // go:embed sql/schema.sql
 var dbSchemaSql string
 
-func (db *DB) CreateTablesIfNotExists(ctx context.Context) error {
+func (db DB) CreateTablesIfNotExists(ctx context.Context) error {
 	_, err := db.db.ExecContext(ctx, dbSchemaSql)
 	return err
 }
@@ -71,4 +72,18 @@ func HandleSQLError(what string, err error) error {
 	}
 
 	return err
+}
+
+func NewDB(ctx context.Context, filepath string) (DB, error) {
+	sqldb, err := sql.Open("sqlite3", filepath+"?_txlock=immediate")
+	if err != nil {
+		return DB{}, err
+	}
+
+	db := DB{sqldb}
+	if err = db.CreateTablesIfNotExists(ctx); err != nil {
+		return DB{}, err
+	}
+
+	return db, nil
 }

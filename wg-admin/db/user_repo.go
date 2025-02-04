@@ -5,7 +5,6 @@ import (
 	"mp2720/wg-admin/wg-admin/db/sqlgen"
 	"mp2720/wg-admin/wg-admin/storage"
 	"mp2720/wg-admin/wg-admin/storage/data"
-	"mp2720/wg-admin/wg-admin/transaction"
 	"mp2720/wg-admin/wg-admin/utils"
 
 	"github.com/google/uuid"
@@ -14,11 +13,10 @@ import (
 
 type userRepo struct {
 	db DB
-	tm transaction.Manager
 }
 
-func NewUserRepo(db DB, tm transaction.Manager) storage.UserRepo {
-	return userRepo{db, tm}
+func NewUserRepo(db DB) storage.UserRepo {
+	return userRepo{db}
 }
 
 func mapUser(user sqlgen.User) (data.User, error) {
