@@ -88,7 +88,7 @@ func NewUser(
 }
 
 func (u User) CanHaveAuthenticationToken() bool {
-	return u.IsBanned
+	return !u.IsBanned
 }
 
 func (u User) CanBeAuthenticatedWithToken(issuedAt time.Time) bool {
@@ -100,8 +100,6 @@ func (u User) CanBeAuthenticatedWithToken(issuedAt time.Time) bool {
 	}
 	return issuedAt.After(*u.TokenIssuedAt)
 }
-
-// func (u User)
 
 func (u User) PaidForTime(t time.Time) bool {
 	if u.PaidByTime == nil {
