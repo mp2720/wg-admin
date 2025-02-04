@@ -5,11 +5,13 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
 type User struct {
 	ID           int64
+	UUID         uuid.UUID
 	Name         string
 	IsAdmin      bool
 	IsBanned     bool
@@ -62,7 +64,13 @@ func NewUser(
 		privateKey = &randomKey
 	}
 
+	uuid, err := uuid.NewV7()
+	if err != nil {
+		return User{}, err
+	}
+
 	u := User{
+		UUID:         uuid,
 		Name:         name,
 		IsAdmin:      isAdmin,
 		IsBanned:     false,
@@ -89,7 +97,7 @@ func (u User) CanBeAuthenticatedWithToken(issuedAt time.Time) bool {
 	return issuedAt.After(*u.TokenIssuedAt)
 }
 
-func (u User) PayedForTime(t time.Time) bool {
+func (u User) PaidForTime(t time.Time) bool {
 	if u.PaidByTime == nil {
 		return false
 	}

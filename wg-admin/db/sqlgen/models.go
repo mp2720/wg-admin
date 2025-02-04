@@ -20,6 +20,7 @@ type Address struct {
 
 type User struct {
 	ID            int64
+	Uuid          string
 	Name          string
 	IsAdmin       bool
 	IsBanned      bool

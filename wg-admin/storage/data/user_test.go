@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
@@ -24,7 +25,9 @@ func Test_NewUser(t *testing.T) {
 
 	user, err := data.NewUser("user", true, &privateKey, "300$", 3)
 	require.NoError(t, err)
+	require.NotEqual(t, uuid.UUID{}, user.UUID)
 	require.Equal(t, data.User{
+		UUID:          user.UUID,
 		Name:          "user",
 		IsAdmin:       true,
 		PrivateKey:    privateKey,
@@ -40,6 +43,7 @@ func Test_NewUser(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, wgtypes.Key{}, user2.PrivateKey) // may fail :(
 	user.PrivateKey = user2.PrivateKey
+	user.UUID = user2.UUID
 	require.Equal(t, user, user2)
 }
 
@@ -77,6 +81,7 @@ func Test_Update(t *testing.T) {
 	err = user.Update(patch)
 	require.NoError(t, err)
 	require.Equal(t, data.User{
+		UUID:          user.UUID,
 		Name:          newName,
 		IsAdmin:       newIsAdmin,
 		IsBanned:      newIsBanned,

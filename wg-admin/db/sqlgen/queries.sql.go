@@ -14,6 +14,7 @@ const createUser = `-- name: CreateUser :execlastid
 
 
 INSERT INTO users (
+    uuid,
     name,
     is_admin,
     is_banned,
@@ -36,11 +37,13 @@ INSERT INTO users (
     ?8,
     ?9,
     ?10,
-    ?11
+    ?11,
+    ?12
 )
 `
 
 type CreateUserParams struct {
+	Uuid           string
 	Name           string
 	IsAdmin        bool
 	IsBanned       bool
@@ -62,6 +65,7 @@ type CreateUserParams struct {
 //	=========== Users ===========
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
 	result, err := q.db.ExecContext(ctx, createUser,
+		arg.Uuid,
 		arg.Name,
 		arg.IsAdmin,
 		arg.IsBanned,
@@ -94,7 +98,7 @@ func (q *Queries) DeleteUser(ctx context.Context, name string) (int64, error) {
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT id, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at, last_seen_at FROM users
+SELECT id, uuid, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at, last_seen_at FROM users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
@@ -108,6 +112,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		var i User
 		if err := rows.Scan(
 			&i.ID,
+			&i.Uuid,
 			&i.Name,
 			&i.IsAdmin,
 			&i.IsBanned,
@@ -134,7 +139,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 }
 
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at, last_seen_at FROM users
+SELECT id, uuid, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at, last_seen_at FROM users
 WHERE name = ?1
 `
 
@@ -143,6 +148,7 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) 
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Uuid,
 		&i.Name,
 		&i.IsAdmin,
 		&i.IsBanned,

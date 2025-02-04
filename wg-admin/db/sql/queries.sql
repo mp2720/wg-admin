@@ -7,6 +7,7 @@
 
 -- name: CreateUser :execlastid
 INSERT INTO users (
+    uuid,
     name,
     is_admin,
     is_banned,
@@ -19,6 +20,7 @@ INSERT INTO users (
     token_issued_at,
     last_seen_at
 ) VALUES (
+    @uuid,
     @name,
     @is_admin,
     @is_banned,

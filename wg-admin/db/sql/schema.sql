@@ -2,6 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS users (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    uuid            TEXT NOT NULL UNIQUE,
     name            TEXT NOT NULL UNIQUE,
     is_admin        BOOLEAN NOT NULL,
     is_banned       BOOLEAN NOT NULL,
@@ -16,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_seen_at    TIMESTAMP
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uuid ON users(uuid);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name ON users(name);
 
 -- when updating config, make sure no other processes are working with db and the net masks are
