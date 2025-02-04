@@ -3,7 +3,9 @@ package config
 import "github.com/caarlos0/env/v11"
 
 type Config struct {
-	SQLiteDBPath string `env:"SQLITE_DB_PATH"`
+	SQLiteDBPath        string `env:"SQLITE_DB_PATH"`
+	AuthTokenSigningKey string `env:"AUTH_TOKEN_SIGNING_KEY"`
+	AuthTokenIssuer     string `env:"AUTH_TOKEN_ISSUER" envDefault:"wgadmin"`
 }
 
 func Load() (*Config, error) {

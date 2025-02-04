@@ -87,6 +87,10 @@ func NewUser(
 	return u, u.validate()
 }
 
+func (u User) CanHaveAuthenticationToken() bool {
+	return u.IsBanned
+}
+
 func (u User) CanBeAuthenticatedWithToken(issuedAt time.Time) bool {
 	if u.IsBanned {
 		return false
@@ -96,6 +100,8 @@ func (u User) CanBeAuthenticatedWithToken(issuedAt time.Time) bool {
 	}
 	return issuedAt.After(*u.TokenIssuedAt)
 }
+
+// func (u User)
 
 func (u User) PaidForTime(t time.Time) bool {
 	if u.PaidByTime == nil {
