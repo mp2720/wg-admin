@@ -37,12 +37,12 @@ CREATE TABLE IF NOT EXISTS addresses (
     description     TEXT,
     desynced_at     TIMESTAMP NOT NULL,
 
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    FOREIGN KEY(owner_user_id) REFERENCES users(id)
         ON DELETE RESTRICT
         ON UPDATE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_owne_user_id ON addresses(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_addresses_host_id ON addresses(host_id);
 
 CREATE TRIGGER IF NOT EXISTS trigger_abort_delete_addresses

@@ -47,7 +47,7 @@ func (db DB) With(ctx context.Context) *sqlgen.Queries {
 	return sqlgen.New(tx.(Tx).sql)
 }
 
-// go:embed sql/schema.sql
+//go:embed sql/schema.sql
 var dbSchemaSql string
 
 func (db DB) CreateTablesIfNotExists(ctx context.Context) error {
