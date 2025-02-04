@@ -3,6 +3,8 @@ package storage
 import (
 	"context"
 	"mp2720/wg-admin/wg-admin/storage/data"
+
+	"github.com/google/uuid"
 )
 
 type UserRepo interface {
@@ -14,12 +16,12 @@ type UserRepo interface {
 	// Get user by name.
 	//
 	// Errors: ErrNotFound.
-	GetByName(ctx context.Context, name string) (data.User, error)
+	GetByUUID(ctx context.Context, uuid uuid.UUID) (data.User, error)
 
 	// Get user by name and lock within the transaction.
 	//
 	// Errors: ErrNotFound.
-	GetByNameLocked(ctx context.Context, name string) (data.User, error)
+	GetByUUIDLocked(ctx context.Context, uuid uuid.UUID) (data.User, error)
 
 	// Get all users.
 	GetAll(ctx context.Context) ([]data.User, error)
@@ -32,5 +34,5 @@ type UserRepo interface {
 	// Delete the user by name.
 	//
 	// Errors: ErrNotFound.
-	Delete(ctx context.Context, name string) error
+	Delete(ctx context.Context, uuid uuid.UUID) error
 }

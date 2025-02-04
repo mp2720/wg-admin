@@ -86,11 +86,11 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 
 const deleteUser = `-- name: DeleteUser :execrows
 DELETE FROM users
-WHERE name = ?1
+WHERE uuid = ?1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, name string) (int64, error) {
-	result, err := q.db.ExecContext(ctx, deleteUser, name)
+func (q *Queries) DeleteUser(ctx context.Context, uuid string) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteUser, uuid)
 	if err != nil {
 		return 0, err
 	}
@@ -140,11 +140,11 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 
 const getUserByName = `-- name: GetUserByName :one
 SELECT id, uuid, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at, last_seen_at FROM users
-WHERE name = ?1
+WHERE uuid = ?1
 `
 
-func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByName, name)
+func (q *Queries) GetUserByName(ctx context.Context, uuid string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByName, uuid)
 	var i User
 	err := row.Scan(
 		&i.ID,

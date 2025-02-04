@@ -36,7 +36,7 @@ INSERT INTO users (
 
 -- name: GetUserByName :one
 SELECT * FROM users
-WHERE name = @name;
+WHERE uuid = @uuid;
 
 -- name: GetAllUsers :many
 SELECT * FROM users;
@@ -58,7 +58,7 @@ WHERE id = @id;
 
 -- name: DeleteUser :execrows
 DELETE FROM users
-WHERE name = @name;
+WHERE uuid = @uuid;
 
 --  =========== Addresses ===========
 

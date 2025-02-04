@@ -8,6 +8,7 @@ import (
 	"mp2720/wg-admin/wg-admin/transaction"
 	"mp2720/wg-admin/wg-admin/utils"
 
+	"github.com/google/uuid"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
@@ -26,8 +27,14 @@ func mapUser(user sqlgen.User) (data.User, error) {
 		return data.User{}, err
 	}
 
+	uuid, err := uuid.Parse(user.Uuid)
+	if err != nil {
+		return data.User{}, err
+	}
+
 	return data.User{
 		ID:            user.ID,
+		UUID:          uuid,
 		Name:          user.Name,
 		IsAdmin:       user.IsAdmin,
 		IsBanned:      user.IsBanned,
@@ -49,6 +56,7 @@ func (ur userRepo) Create(
 		ctx,
 		sqlgen.CreateUserParams{
 			Name:           user.Name,
+			Uuid:           user.UUID.String(),
 			IsAdmin:        user.IsAdmin,
 			IsBanned:       user.IsBanned,
 			Fare:           user.Fare,
@@ -69,8 +77,8 @@ func (ur userRepo) Create(
 	return nil
 }
 
-func (ur userRepo) GetByName(ctx context.Context, name string) (data.User, error) {
-	user, err := ur.db.With(ctx).GetUserByName(ctx, name)
+func (ur userRepo) GetByUUID(ctx context.Context, uuid uuid.UUID) (data.User, error) {
+	user, err := ur.db.With(ctx).GetUserByName(ctx, uuid.String())
 	if err != nil {
 		return data.User{}, HandleSQLError("user", err)
 	}
@@ -78,9 +86,9 @@ func (ur userRepo) GetByName(ctx context.Context, name string) (data.User, error
 	return mapUser(user)
 }
 
-func (ur userRepo) GetByNameLocked(ctx context.Context, name string) (data.User, error) {
-    // NOTE: there's no SELECT FOR UPDATE in SQLite, but if txlock = immediate this will fork fine
-	return ur.GetByName(ctx, name)
+func (ur userRepo) GetByUUIDLocked(ctx context.Context, uuid uuid.UUID) (data.User, error) {
+	// NOTE: there's no SELECT FOR UPDATE in SQLite, but if txlock = immediate this will fork fine
+	return ur.GetByUUID(ctx, uuid)
 }
 
 func (ur userRepo) GetAll(ctx context.Context) ([]data.User, error) {
@@ -129,8 +137,8 @@ func (ur userRepo) Save(ctx context.Context, user data.User) error {
 	return nil
 }
 
-func (ur userRepo) Delete(ctx context.Context, name string) error {
-	rowsAffected, err := ur.db.With(ctx).DeleteUser(ctx, name)
+func (ur userRepo) Delete(ctx context.Context, uuid uuid.UUID) error {
+	rowsAffected, err := ur.db.With(ctx).DeleteUser(ctx, uuid.String())
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"mp2720/wg-admin/wg-admin/utils"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
@@ -31,17 +32,17 @@ type UpdateRequest struct {
 type Service interface {
 	Register(ctx context.Context, req RegisterRequest) (data.User, error)
 
-	Get(ctx context.Context, name string) (data.User, error)
+	Get(ctx context.Context, uuid uuid.UUID) (data.User, error)
 
 	GetAll(ctx context.Context) ([]data.User, error)
 
-	Update(ctx context.Context, name string, req UpdateRequest) (data.User, error)
+	Update(ctx context.Context, uuid uuid.UUID, req UpdateRequest) (data.User, error)
 
-	SetLastSeenNow(ctx context.Context, name string) error
+	SetLastSeenNow(ctx context.Context, uuid uuid.UUID) error
 
-	SetTokenIssuedNow(ctx context.Context, name string) error
+	SetTokenIssuedNow(ctx context.Context, uuid uuid.UUID) error
 
-	MakePayment(ctx context.Context, name string, byTime time.Time) error
+	MakePayment(ctx context.Context, uuid uuid.UUID, byTime time.Time) error
 
 	DesyncUnpaid(ctx context.Context) error
 }
@@ -82,20 +83,20 @@ func (s *service) Register(ctx context.Context, req RegisterRequest) (data.User,
 	return user, nil
 }
 
-func (s *service) Get(ctx context.Context, name string) (data.User, error) {
-	return s.userRepo.GetByName(ctx, name)
+func (s *service) Get(ctx context.Context, uuid uuid.UUID) (data.User, error) {
+	return s.userRepo.GetByUUID(ctx, uuid)
 }
 
 func (s *service) GetAll(ctx context.Context) ([]data.User, error) {
 	return s.userRepo.GetAll(ctx)
 }
 
-func (s *service) Update(ctx context.Context, name string, req UpdateRequest) (data.User, error) {
+func (s *service) Update(ctx context.Context, uuid uuid.UUID, req UpdateRequest) (data.User, error) {
 	var user data.User
 	err := s.tm.InTransaction(ctx, func(ctx context.Context) error {
 		var err error
 
-		user, err = s.userRepo.GetByNameLocked(ctx, name)
+		user, err = s.userRepo.GetByUUIDLocked(ctx, uuid)
 		if err != nil {
 			return err
 		}
@@ -127,9 +128,9 @@ func (s *service) Update(ctx context.Context, name string, req UpdateRequest) (d
 	return user, err
 }
 
-func (s *service) update(ctx context.Context, name string, patch data.UserPatch) error {
+func (s *service) update(ctx context.Context, uuid uuid.UUID, patch data.UserPatch) error {
 	return s.tm.InTransaction(ctx, func(ctx context.Context) error {
-		user, err := s.userRepo.GetByNameLocked(ctx, name)
+		user, err := s.userRepo.GetByUUIDLocked(ctx, uuid)
 		if err != nil {
 			return err
 		}
@@ -142,18 +143,18 @@ func (s *service) update(ctx context.Context, name string, patch data.UserPatch)
 	})
 }
 
-func (s *service) SetLastSeenNow(ctx context.Context, name string) error {
+func (s *service) SetLastSeenNow(ctx context.Context, uuid uuid.UUID) error {
 	now := s.clock.Now()
-	return s.update(ctx, name, data.UserPatch{LastSeenAt: &now})
+	return s.update(ctx, uuid, data.UserPatch{LastSeenAt: &now})
 }
 
-func (s *service) SetTokenIssuedNow(ctx context.Context, name string) error {
+func (s *service) SetTokenIssuedNow(ctx context.Context, uuid uuid.UUID) error {
 	now := s.clock.Now()
-	return s.update(ctx, name, data.UserPatch{TokenIssuedAt: &now})
+	return s.update(ctx, uuid, data.UserPatch{TokenIssuedAt: &now})
 }
 
-func (s *service) MakePayment(ctx context.Context, name string, byTime time.Time) error {
-	return s.update(ctx, name, data.UserPatch{PaidByTime: &byTime})
+func (s *service) MakePayment(ctx context.Context, uuid uuid.UUID, byTime time.Time) error {
+	return s.update(ctx, uuid, data.UserPatch{PaidByTime: &byTime})
 }
 
 func (s *service) DesyncUnpaid(ctx context.Context) error {
