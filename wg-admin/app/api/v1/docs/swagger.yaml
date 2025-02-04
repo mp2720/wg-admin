@@ -1,0 +1,153 @@
+basePath: /v1
+definitions:
+  v1.APIError:
+    properties:
+      message:
+        type: string
+    type: object
+  v1.RegisterUserRequest:
+    properties:
+      fare:
+        type: string
+      is_admin:
+        type: boolean
+      max_addresses:
+        type: integer
+      name:
+        type: string
+      private_key:
+        type: string
+    type: object
+  v1.UserResponse:
+    properties:
+      address_count:
+        type: integer
+      fare:
+        type: string
+      is_admin:
+        type: boolean
+      is_banned:
+        type: boolean
+      last_seen_at:
+        type: string
+      links:
+        $ref: '#/definitions/v1.UserResponseLinks'
+      max_addresses:
+        type: integer
+      name:
+        type: string
+      paid_by_time:
+        type: string
+      public_key:
+        type: string
+      uuid:
+        type: string
+    type: object
+  v1.UserResponseLinks:
+    properties:
+      addresses:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  title: Wireguard admin server
+  version: "1.0"
+paths:
+  /users:
+    get:
+      description: Get all registered users. Admin only.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok
+          schema:
+            items:
+              $ref: '#/definitions/v1.UserResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/v1.APIError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all users
+    post:
+      consumes:
+      - application/json
+      description: Register a new user. Admin only.
+      parameters:
+      - description: user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/v1.RegisterUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Ok
+          schema:
+            items:
+              $ref: '#/definitions/v1.UserResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/v1.APIError'
+        "409":
+          description: User with given name or key already exists
+          schema:
+            $ref: '#/definitions/v1.APIError'
+      security:
+      - ApiKeyAuth: []
+      summary: Register a new user.
+  /users/{uuid}:
+    get:
+      consumes:
+      - application/json
+      description: Get user by UUID. Admin only.
+      parameters:
+      - description: user's UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/v1.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/v1.APIError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/v1.APIError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user by UUID.
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-Token
+    type: apiKey
+swagger: "2.0"

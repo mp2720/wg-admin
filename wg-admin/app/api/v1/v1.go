@@ -1,17 +1,34 @@
 package v1
 
 import (
-	"embed"
+	"mp2720/wg-admin/wg-admin/app/services"
+	"net/url"
 
 	"github.com/labstack/echo/v4"
+	"github.com/swaggo/echo-swagger"
+
+	_ "mp2720/wg-admin/wg-admin/app/api/v1/docs"
 )
 
-//go:embed swagger-ui/*
-//go:embed api.yaml
-var docFS embed.FS
+//	@title		Wireguard admin server
+//	@version	1.0
 
-func AddHandlers(e *echo.Echo) {
-	g := e.Group("v1/")
+//	@host		localhost:8080
+//	@BasePath	/v1
 
-	g.StaticFS("doc", docFS)
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						X-Token
+
+// apiBaseUrl is used as base for the urls that api returns.
+func RegisterHandlers(e *echo.Echo, apiBaseUrl string, userService services.UserService) {
+	v1 := e.Group("v1/")
+	v1.GET("swagger/*", echoSwagger.WrapHandler)
+
+	v1BaseUrl, err := url.JoinPath(apiBaseUrl, "v1")
+	if err != nil {
+		panic(err)
+	}
+
+	registerUserHandlers(v1, v1BaseUrl, userService)
 }

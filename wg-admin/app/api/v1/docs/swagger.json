@@ -1,0 +1,239 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Wireguard admin server",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/v1",
+    "paths": {
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get all registered users. Admin only.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get all users",
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.UserResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Register a new user. Admin only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Register a new user.",
+                "parameters": [
+                    {
+                        "description": "user data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.RegisterUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Ok",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.UserResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "User with given name or key already exists",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{uuid}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get user by UUID. Admin only.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get user by UUID.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user's UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.APIError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "v1.APIError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.RegisterUserRequest": {
+            "type": "object",
+            "properties": {
+                "fare": {
+                    "type": "string"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "max_addresses": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "private_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.UserResponse": {
+            "type": "object",
+            "properties": {
+                "address_count": {
+                    "type": "integer"
+                },
+                "fare": {
+                    "type": "string"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "is_banned": {
+                    "type": "boolean"
+                },
+                "last_seen_at": {
+                    "type": "string"
+                },
+                "links": {
+                    "$ref": "#/definitions/v1.UserResponseLinks"
+                },
+                "max_addresses": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "paid_by_time": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.UserResponseLinks": {
+            "type": "object",
+            "properties": {
+                "addresses": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-Token",
+            "in": "header"
+        }
+    }
+}
