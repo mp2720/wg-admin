@@ -1,0 +1,422 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Wireguard admin server
+  servers:
+  - url: 
+paths:
+  /me:
+    get:
+      description: Get authenticated user data
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+  /users:
+    get:
+      description: Get all users. Admin only
+      responses:
+        '200':
+          description: 
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+    post:
+      description: Register a new user. Admin only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/error_responses/bad_request'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '409':
+          $ref: '#/components/error_responses/already_exists'
+  /users/{uuid}:
+    parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+        required: true
+    get:
+      description: >
+        Get user data.
+        All users are allowed to perform this request with their UUID.
+        Only admin can perform this request with other user's UUID.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '404':
+          $ref: '#/components/error_responses/not_found'
+    delete:
+      description: Delete the user. Admin only.
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '404':
+          $ref: '#/components/error_responses/not_found'
+    put:
+      description: Update the user data. Admin only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/error_responses/bad_request'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '404':
+          $ref: '#/components/error_responses/not_found'
+        '409':
+          $ref: '#/components/error_responses/already_exists'
+  /users/{uuid}/key:
+    parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+        required: true
+    post:
+      description: >
+        Generate new random private key for user.
+        All users are allowed to perform this request with their UUID.
+        Only admin can perform this request with other user's UUID.
+  /users/{uuid}/token:
+    parameters:
+      - in: path
+        name: uuid
+        schema:
+          type: string
+        required: true
+    post:
+      description: >
+        Generate new token for user invalidating the previous one.
+        All users are allowed to perform this request with their UUID.
+        Only admin can perform this request with other user's UUID.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '404':
+          $ref: '#/components/error_responses/not_found'
+  /users/{uuid}/addresses:
+    get:
+      description: >
+        Get addresses owned by user.
+        All users are allowed to perform this request with their UUID.
+        Only admin can perform this request with other user's UUID.
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '404':
+          $ref: '#/components/error_responses/not_found'
+  /addresses/{version}:
+    post:
+      parameters:
+        - in: path
+          name: version
+          required: true
+          schema:
+            type: string
+            enum: [v4, v6]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllocateAddressRequst'
+      description: Allocate a new address for authenticated user.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '500':
+          $ref: '#/components/error_responses/no_free_address'
+  /addresses/{address}:
+    delete:
+      parameters:
+        - in: path
+          name: address
+          required: true
+          schema:
+            type: string
+      description: >
+        Free previously allocated address.
+        All users can free their addresses.
+        Only admin can free other user's addresses.
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '404':
+          $ref: '#/components/error_responses/not_found'
+    put:
+      parameters:
+        - in: path
+          name: address
+          required: true
+          schema:
+            type: string
+      description: >
+        Update previously allocated address.
+        All users can update only their addresses.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAddressRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '401':
+          $ref: '#/components/error_responses/unauthorized'
+        '403':
+          $ref: '#/components/error_responses/forbidden'
+        '404':
+          $ref: '#/components/error_responses/not_found'
+          
+components:
+  error_responses:
+    bad_request:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    forbidden:
+      description: Foribidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    not_found:
+      description: Not found
+      content:
+        application/json:
+          schem:
+            $ref: '#/components/schemas/Error'
+    already_exists:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    no_free_address:
+      description: No free addresses left for this IP version
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    AuthToken:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+
+    RegisterUserRequest:
+      type: object
+      required:
+        - name
+        - is_admin
+        - fare
+        - max_addresses
+      properties:
+        name:
+          type: string
+          example: 'username'
+        is_admin:
+          type: boolean
+        private_key:
+          type: string
+          example: 'WFI+XGP+ygWrZL4LtleqmFUcQgrB3qMDKklLYXp9vF0='
+        fare:
+          type: string
+          example: '300$'
+        max_addresses:
+          type: integer
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'username'
+        is_admin:
+          type: boolean
+        is_banned:
+          type: boolean
+        private_key:
+          type: string
+          example: 'WFI+XGP+ygWrZL4LtleqmFUcQgrB3qMDKklLYXp9vF0='
+        fare:
+          example: '300$'
+          type: string
+        max_addresses:
+          type: integer
+
+    User:
+      type: object
+      required:
+        - uuid
+        - name
+        - is_admin
+        - is_banned
+        - public_key
+        - fare
+        - address_count
+        - max_addresses
+        - last_seen_at
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+          example: 'username'
+        is_admin:
+          type: boolean
+        is_banned:
+          type: boolean
+        public_key:
+          type: string
+          example: 'kg8qU23hQ1PYVKT0IH2TpBAb82EF30xz9ZlqFJ/2oAc='
+        fare:
+          example: '300$'
+          type: string
+        address_count:
+          type: integer
+        max_addresses:
+          type: integer
+        last_seen_at:
+          type: integer
+        paid_by_time:
+          type: string
+          format: datetime
+        links:
+          type: object
+          properties:
+            addresses:
+              type: string
+    
+    Address:
+      type: object
+      properties:
+        address:
+          type: string
+        description:
+          type: string
+        links:
+          type: object
+          properties:
+            user_owner:
+              type: string
+
+    AllocateAddressRequst:
+      type: object
+      properties:
+        description:
+          type: string
+
+    UpdateAddressRequest:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
