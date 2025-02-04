@@ -4,17 +4,20 @@
 package v1
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
+	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 )
 
-// Defines values for PostAddressesVersionParamsVersion.
+// Defines values for AllocateAddressParamsVersion.
 const (
-	V4 PostAddressesVersionParamsVersion = "v4"
-	V6 PostAddressesVersionParamsVersion = "v6"
+	V4 AllocateAddressParamsVersion = "v4"
+	V6 AllocateAddressParamsVersion = "v6"
 )
 
 // Address defines model for Address.
@@ -77,59 +80,59 @@ type User struct {
 	Uuid         string  `json:"uuid"`
 }
 
-// PostAddressesVersionParamsVersion defines parameters for PostAddressesVersion.
-type PostAddressesVersionParamsVersion string
+// AllocateAddressParamsVersion defines parameters for AllocateAddress.
+type AllocateAddressParamsVersion string
 
-// PutAddressesAddressJSONRequestBody defines body for PutAddressesAddress for application/json ContentType.
-type PutAddressesAddressJSONRequestBody = UpdateAddressRequest
+// UpdateAddressJSONRequestBody defines body for UpdateAddress for application/json ContentType.
+type UpdateAddressJSONRequestBody = UpdateAddressRequest
 
-// PostAddressesVersionJSONRequestBody defines body for PostAddressesVersion for application/json ContentType.
-type PostAddressesVersionJSONRequestBody = AllocateAddressRequst
+// AllocateAddressJSONRequestBody defines body for AllocateAddress for application/json ContentType.
+type AllocateAddressJSONRequestBody = AllocateAddressRequst
 
-// PostUsersJSONRequestBody defines body for PostUsers for application/json ContentType.
-type PostUsersJSONRequestBody = RegisterUserRequest
+// RegisterUserJSONRequestBody defines body for RegisterUser for application/json ContentType.
+type RegisterUserJSONRequestBody = RegisterUserRequest
 
-// PutUsersUuidJSONRequestBody defines body for PutUsersUuid for application/json ContentType.
-type PutUsersUuidJSONRequestBody = UpdateUserRequest
+// UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
+type UpdateUserJSONRequestBody = UpdateUserRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
 	// (DELETE /addresses/{address})
-	DeleteAddressesAddress(ctx echo.Context, address string) error
+	FreeAddress(ctx echo.Context, address string) error
 
 	// (PUT /addresses/{address})
-	PutAddressesAddress(ctx echo.Context, address string) error
+	UpdateAddress(ctx echo.Context, address string) error
 
 	// (POST /addresses/{version})
-	PostAddressesVersion(ctx echo.Context, version PostAddressesVersionParamsVersion) error
+	AllocateAddress(ctx echo.Context, version AllocateAddressParamsVersion) error
 
 	// (GET /me)
 	GetMe(ctx echo.Context) error
 
 	// (GET /users)
-	GetUsers(ctx echo.Context) error
+	GetAllUsers(ctx echo.Context) error
 
 	// (POST /users)
-	PostUsers(ctx echo.Context) error
+	RegisterUser(ctx echo.Context) error
 
 	// (DELETE /users/{uuid})
-	DeleteUsersUuid(ctx echo.Context, uuid string) error
+	DeleteUser(ctx echo.Context, uuid string) error
 
 	// (GET /users/{uuid})
-	GetUsersUuid(ctx echo.Context, uuid string) error
+	GetUserByUuid(ctx echo.Context, uuid string) error
 
 	// (PUT /users/{uuid})
-	PutUsersUuid(ctx echo.Context, uuid string) error
+	UpdateUser(ctx echo.Context, uuid string) error
 
 	// (GET /users/{uuid}/addresses)
-	GetUsersUuidAddresses(ctx echo.Context, uuid string) error
+	GetUserAddresses(ctx echo.Context, uuid string) error
 
 	// (POST /users/{uuid}/key)
-	PostUsersUuidKey(ctx echo.Context, uuid string) error
+	RegenerateUserPrivateKey(ctx echo.Context, uuid string) error
 
 	// (POST /users/{uuid}/token)
-	PostUsersUuidToken(ctx echo.Context, uuid string) error
+	RegenerateUserAuthToken(ctx echo.Context, uuid string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -137,8 +140,8 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// DeleteAddressesAddress converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteAddressesAddress(ctx echo.Context) error {
+// FreeAddress converts echo context to params.
+func (w *ServerInterfaceWrapper) FreeAddress(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "address" -------------
 	var address string
@@ -149,12 +152,12 @@ func (w *ServerInterfaceWrapper) DeleteAddressesAddress(ctx echo.Context) error 
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.DeleteAddressesAddress(ctx, address)
+	err = w.Handler.FreeAddress(ctx, address)
 	return err
 }
 
-// PutAddressesAddress converts echo context to params.
-func (w *ServerInterfaceWrapper) PutAddressesAddress(ctx echo.Context) error {
+// UpdateAddress converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateAddress(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "address" -------------
 	var address string
@@ -165,15 +168,15 @@ func (w *ServerInterfaceWrapper) PutAddressesAddress(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutAddressesAddress(ctx, address)
+	err = w.Handler.UpdateAddress(ctx, address)
 	return err
 }
 
-// PostAddressesVersion converts echo context to params.
-func (w *ServerInterfaceWrapper) PostAddressesVersion(ctx echo.Context) error {
+// AllocateAddress converts echo context to params.
+func (w *ServerInterfaceWrapper) AllocateAddress(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "version" -------------
-	var version PostAddressesVersionParamsVersion
+	var version AllocateAddressParamsVersion
 
 	err = runtime.BindStyledParameterWithOptions("simple", "version", ctx.Param("version"), &version, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -181,7 +184,7 @@ func (w *ServerInterfaceWrapper) PostAddressesVersion(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostAddressesVersion(ctx, version)
+	err = w.Handler.AllocateAddress(ctx, version)
 	return err
 }
 
@@ -194,26 +197,26 @@ func (w *ServerInterfaceWrapper) GetMe(ctx echo.Context) error {
 	return err
 }
 
-// GetUsers converts echo context to params.
-func (w *ServerInterfaceWrapper) GetUsers(ctx echo.Context) error {
+// GetAllUsers converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAllUsers(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetUsers(ctx)
+	err = w.Handler.GetAllUsers(ctx)
 	return err
 }
 
-// PostUsers converts echo context to params.
-func (w *ServerInterfaceWrapper) PostUsers(ctx echo.Context) error {
+// RegisterUser converts echo context to params.
+func (w *ServerInterfaceWrapper) RegisterUser(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostUsers(ctx)
+	err = w.Handler.RegisterUser(ctx)
 	return err
 }
 
-// DeleteUsersUuid converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteUsersUuid(ctx echo.Context) error {
+// DeleteUser converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteUser(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "uuid" -------------
 	var uuid string
@@ -224,12 +227,12 @@ func (w *ServerInterfaceWrapper) DeleteUsersUuid(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.DeleteUsersUuid(ctx, uuid)
+	err = w.Handler.DeleteUser(ctx, uuid)
 	return err
 }
 
-// GetUsersUuid converts echo context to params.
-func (w *ServerInterfaceWrapper) GetUsersUuid(ctx echo.Context) error {
+// GetUserByUuid converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUserByUuid(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "uuid" -------------
 	var uuid string
@@ -240,12 +243,12 @@ func (w *ServerInterfaceWrapper) GetUsersUuid(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetUsersUuid(ctx, uuid)
+	err = w.Handler.GetUserByUuid(ctx, uuid)
 	return err
 }
 
-// PutUsersUuid converts echo context to params.
-func (w *ServerInterfaceWrapper) PutUsersUuid(ctx echo.Context) error {
+// UpdateUser converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateUser(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "uuid" -------------
 	var uuid string
@@ -256,12 +259,12 @@ func (w *ServerInterfaceWrapper) PutUsersUuid(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutUsersUuid(ctx, uuid)
+	err = w.Handler.UpdateUser(ctx, uuid)
 	return err
 }
 
-// GetUsersUuidAddresses converts echo context to params.
-func (w *ServerInterfaceWrapper) GetUsersUuidAddresses(ctx echo.Context) error {
+// GetUserAddresses converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUserAddresses(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "uuid" -------------
 	var uuid string
@@ -272,12 +275,12 @@ func (w *ServerInterfaceWrapper) GetUsersUuidAddresses(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetUsersUuidAddresses(ctx, uuid)
+	err = w.Handler.GetUserAddresses(ctx, uuid)
 	return err
 }
 
-// PostUsersUuidKey converts echo context to params.
-func (w *ServerInterfaceWrapper) PostUsersUuidKey(ctx echo.Context) error {
+// RegenerateUserPrivateKey converts echo context to params.
+func (w *ServerInterfaceWrapper) RegenerateUserPrivateKey(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "uuid" -------------
 	var uuid string
@@ -288,12 +291,12 @@ func (w *ServerInterfaceWrapper) PostUsersUuidKey(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostUsersUuidKey(ctx, uuid)
+	err = w.Handler.RegenerateUserPrivateKey(ctx, uuid)
 	return err
 }
 
-// PostUsersUuidToken converts echo context to params.
-func (w *ServerInterfaceWrapper) PostUsersUuidToken(ctx echo.Context) error {
+// RegenerateUserAuthToken converts echo context to params.
+func (w *ServerInterfaceWrapper) RegenerateUserAuthToken(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "uuid" -------------
 	var uuid string
@@ -304,7 +307,7 @@ func (w *ServerInterfaceWrapper) PostUsersUuidToken(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostUsersUuidToken(ctx, uuid)
+	err = w.Handler.RegenerateUserAuthToken(ctx, uuid)
 	return err
 }
 
@@ -336,17 +339,878 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.DELETE(baseURL+"/addresses/:address", wrapper.DeleteAddressesAddress)
-	router.PUT(baseURL+"/addresses/:address", wrapper.PutAddressesAddress)
-	router.POST(baseURL+"/addresses/:version", wrapper.PostAddressesVersion)
+	router.DELETE(baseURL+"/addresses/:address", wrapper.FreeAddress)
+	router.PUT(baseURL+"/addresses/:address", wrapper.UpdateAddress)
+	router.POST(baseURL+"/addresses/:version", wrapper.AllocateAddress)
 	router.GET(baseURL+"/me", wrapper.GetMe)
-	router.GET(baseURL+"/users", wrapper.GetUsers)
-	router.POST(baseURL+"/users", wrapper.PostUsers)
-	router.DELETE(baseURL+"/users/:uuid", wrapper.DeleteUsersUuid)
-	router.GET(baseURL+"/users/:uuid", wrapper.GetUsersUuid)
-	router.PUT(baseURL+"/users/:uuid", wrapper.PutUsersUuid)
-	router.GET(baseURL+"/users/:uuid/addresses", wrapper.GetUsersUuidAddresses)
-	router.POST(baseURL+"/users/:uuid/key", wrapper.PostUsersUuidKey)
-	router.POST(baseURL+"/users/:uuid/token", wrapper.PostUsersUuidToken)
+	router.GET(baseURL+"/users", wrapper.GetAllUsers)
+	router.POST(baseURL+"/users", wrapper.RegisterUser)
+	router.DELETE(baseURL+"/users/:uuid", wrapper.DeleteUser)
+	router.GET(baseURL+"/users/:uuid", wrapper.GetUserByUuid)
+	router.PUT(baseURL+"/users/:uuid", wrapper.UpdateUser)
+	router.GET(baseURL+"/users/:uuid/addresses", wrapper.GetUserAddresses)
+	router.POST(baseURL+"/users/:uuid/key", wrapper.RegenerateUserPrivateKey)
+	router.POST(baseURL+"/users/:uuid/token", wrapper.RegenerateUserAuthToken)
 
+}
+
+type FreeAddressRequestObject struct {
+	Address string `json:"address"`
+}
+
+type FreeAddressResponseObject interface {
+	VisitFreeAddressResponse(w http.ResponseWriter) error
+}
+
+type FreeAddress204Response struct {
+}
+
+func (response FreeAddress204Response) VisitFreeAddressResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type FreeAddress401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response FreeAddress401JSONResponse) VisitFreeAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FreeAddress403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response FreeAddress403JSONResponse) VisitFreeAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FreeAddress404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response FreeAddress404JSONResponse) VisitFreeAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAddressRequestObject struct {
+	Address string `json:"address"`
+	Body    *UpdateAddressJSONRequestBody
+}
+
+type UpdateAddressResponseObject interface {
+	VisitUpdateAddressResponse(w http.ResponseWriter) error
+}
+
+type UpdateAddress200JSONResponse Address
+
+func (response UpdateAddress200JSONResponse) VisitUpdateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAddress401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateAddress401JSONResponse) VisitUpdateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAddress403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response UpdateAddress403JSONResponse) VisitUpdateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAddress404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UpdateAddress404JSONResponse) VisitUpdateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AllocateAddressRequestObject struct {
+	Version AllocateAddressParamsVersion `json:"version"`
+	Body    *AllocateAddressJSONRequestBody
+}
+
+type AllocateAddressResponseObject interface {
+	VisitAllocateAddressResponse(w http.ResponseWriter) error
+}
+
+type AllocateAddress200JSONResponse Address
+
+func (response AllocateAddress200JSONResponse) VisitAllocateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AllocateAddress401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response AllocateAddress401JSONResponse) VisitAllocateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AllocateAddress403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response AllocateAddress403JSONResponse) VisitAllocateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AllocateAddress500JSONResponse struct{ NoFreeAddressJSONResponse }
+
+func (response AllocateAddress500JSONResponse) VisitAllocateAddressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMeRequestObject struct {
+}
+
+type GetMeResponseObject interface {
+	VisitGetMeResponse(w http.ResponseWriter) error
+}
+
+type GetMe200JSONResponse User
+
+func (response GetMe200JSONResponse) VisitGetMeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMe401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetMe401JSONResponse) VisitGetMeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllUsersRequestObject struct {
+}
+
+type GetAllUsersResponseObject interface {
+	VisitGetAllUsersResponse(w http.ResponseWriter) error
+}
+
+type GetAllUsers200JSONResponse []User
+
+func (response GetAllUsers200JSONResponse) VisitGetAllUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllUsers401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetAllUsers401JSONResponse) VisitGetAllUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllUsers403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response GetAllUsers403JSONResponse) VisitGetAllUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterUserRequestObject struct {
+	Body *RegisterUserJSONRequestBody
+}
+
+type RegisterUserResponseObject interface {
+	VisitRegisterUserResponse(w http.ResponseWriter) error
+}
+
+type RegisterUser201JSONResponse User
+
+func (response RegisterUser201JSONResponse) VisitRegisterUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterUser400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response RegisterUser400JSONResponse) VisitRegisterUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterUser401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RegisterUser401JSONResponse) VisitRegisterUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterUser403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response RegisterUser403JSONResponse) VisitRegisterUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegisterUser409JSONResponse struct{ AlreadyExistsJSONResponse }
+
+func (response RegisterUser409JSONResponse) VisitRegisterUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteUserRequestObject struct {
+	Uuid string `json:"uuid"`
+}
+
+type DeleteUserResponseObject interface {
+	VisitDeleteUserResponse(w http.ResponseWriter) error
+}
+
+type DeleteUser204Response struct {
+}
+
+func (response DeleteUser204Response) VisitDeleteUserResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteUser401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteUser401JSONResponse) VisitDeleteUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteUser403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response DeleteUser403JSONResponse) VisitDeleteUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteUser404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteUser404JSONResponse) VisitDeleteUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserByUuidRequestObject struct {
+	Uuid string `json:"uuid"`
+}
+
+type GetUserByUuidResponseObject interface {
+	VisitGetUserByUuidResponse(w http.ResponseWriter) error
+}
+
+type GetUserByUuid200JSONResponse User
+
+func (response GetUserByUuid200JSONResponse) VisitGetUserByUuidResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserByUuid401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetUserByUuid401JSONResponse) VisitGetUserByUuidResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserByUuid403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response GetUserByUuid403JSONResponse) VisitGetUserByUuidResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserByUuid404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetUserByUuid404JSONResponse) VisitGetUserByUuidResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateUserRequestObject struct {
+	Uuid string `json:"uuid"`
+	Body *UpdateUserJSONRequestBody
+}
+
+type UpdateUserResponseObject interface {
+	VisitUpdateUserResponse(w http.ResponseWriter) error
+}
+
+type UpdateUser200JSONResponse User
+
+func (response UpdateUser200JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateUser400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateUser400JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateUser401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateUser401JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateUser403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response UpdateUser403JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateUser404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UpdateUser404JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateUser409JSONResponse struct{ AlreadyExistsJSONResponse }
+
+func (response UpdateUser409JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserAddressesRequestObject struct {
+	Uuid string `json:"uuid"`
+}
+
+type GetUserAddressesResponseObject interface {
+	VisitGetUserAddressesResponse(w http.ResponseWriter) error
+}
+
+type GetUserAddresses200JSONResponse Address
+
+func (response GetUserAddresses200JSONResponse) VisitGetUserAddressesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserAddresses401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetUserAddresses401JSONResponse) VisitGetUserAddressesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserAddresses403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response GetUserAddresses403JSONResponse) VisitGetUserAddressesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUserAddresses404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetUserAddresses404JSONResponse) VisitGetUserAddressesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegenerateUserPrivateKeyRequestObject struct {
+	Uuid string `json:"uuid"`
+}
+
+type RegenerateUserPrivateKeyResponseObject interface {
+	VisitRegenerateUserPrivateKeyResponse(w http.ResponseWriter) error
+}
+
+type RegenerateUserAuthTokenRequestObject struct {
+	Uuid string `json:"uuid"`
+}
+
+type RegenerateUserAuthTokenResponseObject interface {
+	VisitRegenerateUserAuthTokenResponse(w http.ResponseWriter) error
+}
+
+type RegenerateUserAuthToken200JSONResponse AuthToken
+
+func (response RegenerateUserAuthToken200JSONResponse) VisitRegenerateUserAuthTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegenerateUserAuthToken401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response RegenerateUserAuthToken401JSONResponse) VisitRegenerateUserAuthTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegenerateUserAuthToken403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response RegenerateUserAuthToken403JSONResponse) VisitRegenerateUserAuthTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RegenerateUserAuthToken404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response RegenerateUserAuthToken404JSONResponse) VisitRegenerateUserAuthTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+// StrictServerInterface represents all server handlers.
+type StrictServerInterface interface {
+
+	// (DELETE /addresses/{address})
+	FreeAddress(ctx context.Context, request FreeAddressRequestObject) (FreeAddressResponseObject, error)
+
+	// (PUT /addresses/{address})
+	UpdateAddress(ctx context.Context, request UpdateAddressRequestObject) (UpdateAddressResponseObject, error)
+
+	// (POST /addresses/{version})
+	AllocateAddress(ctx context.Context, request AllocateAddressRequestObject) (AllocateAddressResponseObject, error)
+
+	// (GET /me)
+	GetMe(ctx context.Context, request GetMeRequestObject) (GetMeResponseObject, error)
+
+	// (GET /users)
+	GetAllUsers(ctx context.Context, request GetAllUsersRequestObject) (GetAllUsersResponseObject, error)
+
+	// (POST /users)
+	RegisterUser(ctx context.Context, request RegisterUserRequestObject) (RegisterUserResponseObject, error)
+
+	// (DELETE /users/{uuid})
+	DeleteUser(ctx context.Context, request DeleteUserRequestObject) (DeleteUserResponseObject, error)
+
+	// (GET /users/{uuid})
+	GetUserByUuid(ctx context.Context, request GetUserByUuidRequestObject) (GetUserByUuidResponseObject, error)
+
+	// (PUT /users/{uuid})
+	UpdateUser(ctx context.Context, request UpdateUserRequestObject) (UpdateUserResponseObject, error)
+
+	// (GET /users/{uuid}/addresses)
+	GetUserAddresses(ctx context.Context, request GetUserAddressesRequestObject) (GetUserAddressesResponseObject, error)
+
+	// (POST /users/{uuid}/key)
+	RegenerateUserPrivateKey(ctx context.Context, request RegenerateUserPrivateKeyRequestObject) (RegenerateUserPrivateKeyResponseObject, error)
+
+	// (POST /users/{uuid}/token)
+	RegenerateUserAuthToken(ctx context.Context, request RegenerateUserAuthTokenRequestObject) (RegenerateUserAuthTokenResponseObject, error)
+}
+
+type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
+type StrictMiddlewareFunc = strictecho.StrictEchoMiddlewareFunc
+
+func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareFunc) ServerInterface {
+	return &strictHandler{ssi: ssi, middlewares: middlewares}
+}
+
+type strictHandler struct {
+	ssi         StrictServerInterface
+	middlewares []StrictMiddlewareFunc
+}
+
+// FreeAddress operation middleware
+func (sh *strictHandler) FreeAddress(ctx echo.Context, address string) error {
+	var request FreeAddressRequestObject
+
+	request.Address = address
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.FreeAddress(ctx.Request().Context(), request.(FreeAddressRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "FreeAddress")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(FreeAddressResponseObject); ok {
+		return validResponse.VisitFreeAddressResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UpdateAddress operation middleware
+func (sh *strictHandler) UpdateAddress(ctx echo.Context, address string) error {
+	var request UpdateAddressRequestObject
+
+	request.Address = address
+
+	var body UpdateAddressJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAddress(ctx.Request().Context(), request.(UpdateAddressRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAddress")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(UpdateAddressResponseObject); ok {
+		return validResponse.VisitUpdateAddressResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// AllocateAddress operation middleware
+func (sh *strictHandler) AllocateAddress(ctx echo.Context, version AllocateAddressParamsVersion) error {
+	var request AllocateAddressRequestObject
+
+	request.Version = version
+
+	var body AllocateAddressJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AllocateAddress(ctx.Request().Context(), request.(AllocateAddressRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AllocateAddress")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(AllocateAddressResponseObject); ok {
+		return validResponse.VisitAllocateAddressResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetMe operation middleware
+func (sh *strictHandler) GetMe(ctx echo.Context) error {
+	var request GetMeRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMe(ctx.Request().Context(), request.(GetMeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMe")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetMeResponseObject); ok {
+		return validResponse.VisitGetMeResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetAllUsers operation middleware
+func (sh *strictHandler) GetAllUsers(ctx echo.Context) error {
+	var request GetAllUsersRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAllUsers(ctx.Request().Context(), request.(GetAllUsersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAllUsers")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetAllUsersResponseObject); ok {
+		return validResponse.VisitGetAllUsersResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RegisterUser operation middleware
+func (sh *strictHandler) RegisterUser(ctx echo.Context) error {
+	var request RegisterUserRequestObject
+
+	var body RegisterUserJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RegisterUser(ctx.Request().Context(), request.(RegisterUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RegisterUser")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RegisterUserResponseObject); ok {
+		return validResponse.VisitRegisterUserResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteUser operation middleware
+func (sh *strictHandler) DeleteUser(ctx echo.Context, uuid string) error {
+	var request DeleteUserRequestObject
+
+	request.Uuid = uuid
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteUser(ctx.Request().Context(), request.(DeleteUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteUser")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteUserResponseObject); ok {
+		return validResponse.VisitDeleteUserResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetUserByUuid operation middleware
+func (sh *strictHandler) GetUserByUuid(ctx echo.Context, uuid string) error {
+	var request GetUserByUuidRequestObject
+
+	request.Uuid = uuid
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetUserByUuid(ctx.Request().Context(), request.(GetUserByUuidRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetUserByUuid")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetUserByUuidResponseObject); ok {
+		return validResponse.VisitGetUserByUuidResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UpdateUser operation middleware
+func (sh *strictHandler) UpdateUser(ctx echo.Context, uuid string) error {
+	var request UpdateUserRequestObject
+
+	request.Uuid = uuid
+
+	var body UpdateUserJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateUser(ctx.Request().Context(), request.(UpdateUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateUser")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(UpdateUserResponseObject); ok {
+		return validResponse.VisitUpdateUserResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetUserAddresses operation middleware
+func (sh *strictHandler) GetUserAddresses(ctx echo.Context, uuid string) error {
+	var request GetUserAddressesRequestObject
+
+	request.Uuid = uuid
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetUserAddresses(ctx.Request().Context(), request.(GetUserAddressesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetUserAddresses")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetUserAddressesResponseObject); ok {
+		return validResponse.VisitGetUserAddressesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RegenerateUserPrivateKey operation middleware
+func (sh *strictHandler) RegenerateUserPrivateKey(ctx echo.Context, uuid string) error {
+	var request RegenerateUserPrivateKeyRequestObject
+
+	request.Uuid = uuid
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RegenerateUserPrivateKey(ctx.Request().Context(), request.(RegenerateUserPrivateKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RegenerateUserPrivateKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RegenerateUserPrivateKeyResponseObject); ok {
+		return validResponse.VisitRegenerateUserPrivateKeyResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RegenerateUserAuthToken operation middleware
+func (sh *strictHandler) RegenerateUserAuthToken(ctx echo.Context, uuid string) error {
+	var request RegenerateUserAuthTokenRequestObject
+
+	request.Uuid = uuid
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RegenerateUserAuthToken(ctx.Request().Context(), request.(RegenerateUserAuthTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RegenerateUserAuthToken")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(RegenerateUserAuthTokenResponseObject); ok {
+		return validResponse.VisitRegenerateUserAuthTokenResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }

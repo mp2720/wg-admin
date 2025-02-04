@@ -3,3 +3,4 @@ output: api.gen.go
 generate:
   models: true
   echo-server: true
+  strict-server: true

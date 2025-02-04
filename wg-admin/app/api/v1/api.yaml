@@ -19,6 +19,7 @@ paths:
   /users:
     get:
       description: Get all users. Admin only
+      operationId: getAllUsers
       responses:
         '200':
           description: 
@@ -34,6 +35,7 @@ paths:
           $ref: '#/components/error_responses/forbidden'
     post:
       description: Register a new user. Admin only
+      operationId: registerUser
       requestBody:
         required: true
         content:
@@ -62,6 +64,7 @@ paths:
           type: string
         required: true
     get:
+      operationId: getUserByUuid
       description: >
         Get user data.
         All users are allowed to perform this request with their UUID.
@@ -79,12 +82,11 @@ paths:
         '404':
           $ref: '#/components/error_responses/not_found'
     delete:
+      operationId: deleteUser
       description: Delete the user. Admin only.
       responses:
         '204':
-          content:
-            application/json:
-              schema:
+          description: ok
         '401':
           $ref: '#/components/error_responses/unauthorized'
         '403':
@@ -92,6 +94,7 @@ paths:
         '404':
           $ref: '#/components/error_responses/not_found'
     put:
+      operationId: updateUser
       description: Update the user data. Admin only
       requestBody:
         required: true
@@ -123,6 +126,7 @@ paths:
           type: string
         required: true
     post:
+      operationId: regenerateUserPrivateKey
       description: >
         Generate new random private key for user.
         All users are allowed to perform this request with their UUID.
@@ -135,6 +139,7 @@ paths:
           type: string
         required: true
     post:
+      operationId: regenerateUserAuthToken
       description: >
         Generate new token for user invalidating the previous one.
         All users are allowed to perform this request with their UUID.
@@ -153,6 +158,7 @@ paths:
           $ref: '#/components/error_responses/not_found'
   /users/{uuid}/addresses:
     get:
+      operationId: getUserAddresses
       description: >
         Get addresses owned by user.
         All users are allowed to perform this request with their UUID.
@@ -177,6 +183,7 @@ paths:
           $ref: '#/components/error_responses/not_found'
   /addresses/{version}:
     post:
+      operationId: allocateAddress
       parameters:
         - in: path
           name: version
@@ -205,6 +212,7 @@ paths:
           $ref: '#/components/error_responses/no_free_address'
   /addresses/{address}:
     delete:
+      operationId: freeAddress
       parameters:
         - in: path
           name: address
@@ -217,9 +225,7 @@ paths:
         Only admin can free other user's addresses.
       responses:
         '204':
-          content:
-            application/json:
-              schema:
+          description: ok
         '401':
           $ref: '#/components/error_responses/unauthorized'
         '403':
@@ -227,6 +233,7 @@ paths:
         '404':
           $ref: '#/components/error_responses/not_found'
     put:
+      operationId: updateAddress
       parameters:
         - in: path
           name: address
