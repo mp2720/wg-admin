@@ -24,8 +24,7 @@ INSERT INTO users (
     address_count,
     max_addresses,
     paid_by_time,
-    token_issued_at,
-    last_seen_at
+    token_issued_at
 ) VALUES (
     ?1,
     ?2,
@@ -37,8 +36,7 @@ INSERT INTO users (
     ?8,
     ?9,
     ?10,
-    ?11,
-    ?12
+    ?11
 )
 `
 
@@ -54,7 +52,6 @@ type CreateUserParams struct {
 	MaxAddresses   int64
 	PaidByTime     *time.Time
 	TokenIssuedAt  *time.Time
-	LastSeenAt     *time.Time
 }
 
 // Note that generated queries have some parameters marked as nullable, but they really shouldn't.
@@ -76,7 +73,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 		arg.MaxAddresses,
 		arg.PaidByTime,
 		arg.TokenIssuedAt,
-		arg.LastSeenAt,
 	)
 	if err != nil {
 		return 0, err
@@ -98,7 +94,7 @@ func (q *Queries) DeleteUser(ctx context.Context, uuid string) (int64, error) {
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT id, uuid, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at, last_seen_at FROM users
+SELECT id, uuid, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at FROM users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
@@ -123,7 +119,6 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 			&i.MaxAddresses,
 			&i.PaidByTime,
 			&i.TokenIssuedAt,
-			&i.LastSeenAt,
 		); err != nil {
 			return nil, err
 		}
@@ -139,7 +134,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 }
 
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, uuid, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at, last_seen_at FROM users
+SELECT id, uuid, name, is_admin, is_banned, fare, private_key, public_key, address_count, max_addresses, paid_by_time, token_issued_at FROM users
 WHERE uuid = ?1
 `
 
@@ -159,7 +154,6 @@ func (q *Queries) GetUserByName(ctx context.Context, uuid string) (User, error) 
 		&i.MaxAddresses,
 		&i.PaidByTime,
 		&i.TokenIssuedAt,
-		&i.LastSeenAt,
 	)
 	return i, err
 }
@@ -175,9 +169,8 @@ UPDATE users SET
     address_count = ?7,
     max_addresses = ?8,
     paid_by_time = ?9,
-    token_issued_at = ?10,
-    last_seen_at = ?11
-WHERE id = ?12
+    token_issued_at = ?10
+WHERE id = ?11
 `
 
 type UpdateUserParams struct {
@@ -191,7 +184,6 @@ type UpdateUserParams struct {
 	MaxAddresses  int64
 	PaidByTime    *time.Time
 	TokenIssuedAt *time.Time
-	LastSeenAt    *time.Time
 	ID            int64
 }
 
@@ -207,7 +199,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, 
 		arg.MaxAddresses,
 		arg.PaidByTime,
 		arg.TokenIssuedAt,
-		arg.LastSeenAt,
 		arg.ID,
 	)
 	if err != nil {

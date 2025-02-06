@@ -13,8 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     max_addresses   INTEGER NOT NULL,
 
     paid_by_time    TIMESTAMP,
-    token_issued_at TIMESTAMP,
-    last_seen_at    TIMESTAMP
+    token_issued_at TIMESTAMP
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uuid ON users(uuid);

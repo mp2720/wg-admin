@@ -35,7 +35,6 @@ func Test_NewUser(t *testing.T) {
 		AddressCount:  0,
 		MaxAddresses:  3,
 		TokenIssuedAt: nil,
-		LastSeenAt:    nil,
 		PaidByTime:    nil,
 	}, user)
 
@@ -61,7 +60,6 @@ func Test_Update(t *testing.T) {
 	newAddressCount := int64(2)
 	newMaxAddresses := int64(4)
 	newTokenIssuedAt := time.Now()
-	newLastSeenAt := time.Now()
 	newPaidByTime := time.Now()
 
 	patch := data.UserPatch{
@@ -73,7 +71,6 @@ func Test_Update(t *testing.T) {
 		AddressCount:  &newAddressCount,
 		MaxAddresses:  &newMaxAddresses,
 		TokenIssuedAt: &newTokenIssuedAt,
-		LastSeenAt:    &newLastSeenAt,
 		PaidByTime:    &newPaidByTime,
 	}
 
@@ -90,7 +87,6 @@ func Test_Update(t *testing.T) {
 		AddressCount:  newAddressCount,
 		MaxAddresses:  newMaxAddresses,
 		TokenIssuedAt: &newTokenIssuedAt,
-		LastSeenAt:    &newLastSeenAt,
 		PaidByTime:    &newPaidByTime,
 	}, user)
 

@@ -38,8 +38,6 @@ type UserService interface {
 
 	Update(ctx context.Context, uuid uuid.UUID, req UpdateRequest) (data.User, error)
 
-	SetLastSeenNow(ctx context.Context, uuid uuid.UUID) error
-
 	SetTokenIssuedNow(ctx context.Context, uuid uuid.UUID) error
 
 	MakePayment(ctx context.Context, uuid uuid.UUID, byTime time.Time) error
@@ -143,11 +141,6 @@ func (us *userService) update(ctx context.Context, uuid uuid.UUID, patch data.Us
 
 		return us.userRepo.Save(ctx, user)
 	})
-}
-
-func (us *userService) SetLastSeenNow(ctx context.Context, uuid uuid.UUID) error {
-	now := us.clock.Now()
-	return us.update(ctx, uuid, data.UserPatch{LastSeenAt: &now})
 }
 
 func (us *userService) SetTokenIssuedNow(ctx context.Context, uuid uuid.UUID) error {

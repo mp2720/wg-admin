@@ -31,7 +31,6 @@ type User struct {
 	MaxAddresses  int64
 	PaidByTime    *time.Time
 	TokenIssuedAt *time.Time
-	LastSeenAt    *time.Time
 }
 
 type WgNetConfig struct {

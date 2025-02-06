@@ -21,7 +21,6 @@ type User struct {
 	MaxAddresses int64
 
 	TokenIssuedAt *time.Time
-	LastSeenAt    *time.Time
 	PaidByTime    *time.Time
 }
 
@@ -80,7 +79,6 @@ func NewUser(
 		MaxAddresses: maxAddresses,
 
 		TokenIssuedAt: nil,
-		LastSeenAt:    nil,
 		PaidByTime:    nil,
 	}
 
@@ -118,7 +116,6 @@ type UserPatch struct {
 	AddressCount  *int64
 	MaxAddresses  *int64
 	TokenIssuedAt *time.Time
-	LastSeenAt    *time.Time
 	PaidByTime    *time.Time
 }
 
@@ -148,9 +145,6 @@ func (u *User) Update(patch UserPatch) error {
 	}
 	if patch.TokenIssuedAt != nil {
 		updated.TokenIssuedAt = patch.TokenIssuedAt
-	}
-	if patch.LastSeenAt != nil {
-		updated.LastSeenAt = patch.LastSeenAt
 	}
 	if patch.PaidByTime != nil {
 		updated.PaidByTime = patch.PaidByTime

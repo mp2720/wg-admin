@@ -17,8 +17,7 @@ INSERT INTO users (
     address_count,
     max_addresses,
     paid_by_time,
-    token_issued_at,
-    last_seen_at
+    token_issued_at
 ) VALUES (
     @uuid,
     @name,
@@ -30,8 +29,7 @@ INSERT INTO users (
     @addresses_count,
     @max_addresses,
     @paid_by_time,
-    @token_issued_at,
-    @last_seen_at
+    @token_issued_at
 );
 
 -- name: GetUserByName :one
@@ -52,8 +50,7 @@ UPDATE users SET
     address_count = @address_count,
     max_addresses = @max_addresses,
     paid_by_time = @paid_by_time,
-    token_issued_at = @token_issued_at,
-    last_seen_at = @last_seen_at
+    token_issued_at = @token_issued_at
 WHERE id = @id;
 
 -- name: DeleteUser :execrows
