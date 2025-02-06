@@ -31,6 +31,10 @@ func (tx Tx) Rollback(ctx context.Context) error {
 	return tx.sql.Rollback()
 }
 
+func (db DB) Clock() error {
+    return db.db.Close()
+}
+
 func (db DB) Begin(ctx context.Context) (transaction.Tx, error) {
 	sqlTx, err := db.db.Begin()
 	if err != nil {
