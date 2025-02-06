@@ -31,7 +31,7 @@ func (tx Tx) Rollback(ctx context.Context) error {
 	return tx.sql.Rollback()
 }
 
-func (db DB) Clock() error {
+func (db DB) Close() error {
     return db.db.Close()
 }
 
